@@ -1,0 +1,114 @@
+//schema.js
+const func = require('../utils/mysql');
+const sql = require('../utils/widget/sql');
+const {
+  GraphQLBoolean,
+  GraphQLObjectType,//自定义类型
+  GraphQLSchema,//定义视图
+  GraphQLInterfaceType,//描述多个类型的通用字段
+  GraphQLList,//其他类型的封装
+  GraphQLString,//字符串类型
+  GraphQLInt,//整型
+  GraphQLFloat,//浮点型
+  GraphQLEnumType,//可迭代类型
+  GraphQLNonNull,//不允许为空类型,接受一个graphql类型
+} = require('graphql');
+// const queryObj = new GraphQLObjectType({
+//   name: 'myFirstQuery',
+//   fields: {
+//       hello: {
+//           type: GraphQLString,
+//           args: {
+//               say: {
+//                   type: GraphQLString,
+//                   defaultValue: 'world'
+//               }
+//           },
+//           resolve(parentValue, args, request) {
+//               return 'hello '+args.say+' !';
+//           }
+//       },
+//       test: {
+//           name: 'this is a test',
+//           type: new GraphQLObjectType({
+//               name: 'persen',
+//             fields: {
+//                 name: {
+//                     type: GraphQLString
+//                 },
+//                 age: {
+//                     type: GraphQLString
+//                 }
+//             },
+//           }),
+//           args: {
+//             name: {
+//                 type: GraphQLString,
+//                 defaultValue: 'Charming'
+//             }
+//         },
+//           resolve(parentValue) {
+//               return {
+//                   name: parentValue,
+//                   age: '666'
+//               }
+//           }
+//       }
+//   }
+// });
+const objType = new GraphQLObjectType({
+  name: 'meta',
+  fields: {
+    create_time: {
+      type: GraphQLString
+    },
+    update_time: {
+      type: GraphQLString
+    }
+  }
+})
+const ListType = new GraphQLObjectType({
+  name: 'List',
+  fields: {
+    id: {
+      type: GraphQLString
+    },
+    name: {
+      type: GraphQLString
+    },
+    price: {
+      type: GraphQLString
+    },
+    date: {
+      type: GraphQLString
+    },
+    checked: {
+      type: GraphQLBoolean
+    },
+    meta: {
+      type: objType
+    }
+  }
+})
+const listFields = {
+  type: new GraphQLList(ListType),
+  args: {},
+  resolve(root: any, params: any, options: any) {
+    return new Promise((resolve) => {
+      func.connPool(sql.queryAll, 'goods', (rows: any) => {
+        resolve(rows)
+      });
+    })
+
+    //   return List.find({}).exec() // 数据库查询
+  }
+}
+const queryType = new GraphQLObjectType({
+  name: 'getAllList',
+  fields: {
+    lists: listFields,
+  }
+})
+module.exports = new GraphQLSchema({
+  query: queryType
+});
